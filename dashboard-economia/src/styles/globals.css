@@ -1,0 +1,166 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg-page: #f3efe5;
+  --color-bg-card: rgba(255, 255, 255, 0.86);
+  --color-bg-secondary: rgba(255, 255, 255, 0.66);
+  --color-bg-tertiary: #d7d2c8;
+  --color-bg-elevated: rgba(255, 255, 255, 0.94);
+  --color-text-primary: #1c1917;
+  --color-text-secondary: #44403c;
+  --color-text-tertiary: #78716c;
+  --color-text-inverse: #fafaf9;
+  --color-accent-primary: #0f766e;
+  --color-border: rgba(28, 25, 23, 0.12);
+  --color-border-subtle: rgba(28, 25, 23, 0.06);
+  --color-success: #15803d;
+  --color-danger: #be123c;
+  --chart-selic: #6366f1;
+  --chart-ipca: #f43f5e;
+  --chart-dolar: #10b981;
+  --chart-cdi: #f59e0b;
+  --chart-desemprego: #8b5cf6;
+  --map-min: #e0f2fe;
+  --map-q1: #7dd3fc;
+  --map-q2: #38bdf8;
+  --map-q3: #0284c7;
+  --map-max: #075985;
+}
+
+.dark {
+  --color-bg-page: #111827;
+  --color-bg-card: rgba(17, 24, 39, 0.88);
+  --color-bg-secondary: rgba(31, 41, 55, 0.78);
+  --color-bg-tertiary: rgba(55, 65, 81, 0.88);
+  --color-bg-elevated: rgba(15, 23, 42, 0.96);
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-tertiary: #9ca3af;
+  --color-text-inverse: #0f172a;
+  --color-accent-primary: #38b2ac;
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-success: #4ade80;
+  --color-danger: #fb7185;
+  --map-min: #0c4a6e;
+  --map-q1: #0369a1;
+  --map-q2: #0284c7;
+  --map-q3: #38bdf8;
+  --map-max: #bae6fd;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.14), transparent 30%),
+    radial-gradient(circle at top right, rgba(245, 158, 11, 0.14), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 25%),
+    var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-body), 'DM Sans', sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), 'Playfair Display', serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.card {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 28px 64px rgba(15, 23, 42, 0.12);
+  border-color: rgba(15, 118, 110, 0.28);
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+}
+
+.skeleton::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.6s infinite;
+  content: '';
+}
+
+.fade-in {
+  animation: fade-in-up 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display), 'Playfair Display', serif;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}

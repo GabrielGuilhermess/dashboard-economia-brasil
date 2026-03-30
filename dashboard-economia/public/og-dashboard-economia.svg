@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#F3EFE5"/>
+  <rect x="42" y="42" width="1116" height="546" rx="36" fill="#0F172A"/>
+  <rect x="80" y="82" width="1040" height="466" rx="28" fill="#111827"/>
+  <path d="M140 470C222.667 438.667 286 418.333 330 409C374 399.667 424.333 392.333 481 387C537.667 381.667 595.667 355.667 655 309C714.333 262.333 766.333 221.667 811 187C855.667 152.333 920.667 142.333 1006 157" stroke="#38B2AC" stroke-width="10" stroke-linecap="round"/>
+  <path d="M140 394C204 372.667 260.333 362 309 362C357.667 362 407.333 347 458 317C508.667 287 553 267.333 591 258C629 248.667 680 235 744 217C808 199 851.333 178.333 874 155" stroke="#F59E0B" stroke-width="10" stroke-linecap="round" stroke-dasharray="12 20"/>
+  <circle cx="1006" cy="157" r="18" fill="#38B2AC"/>
+  <circle cx="874" cy="155" r="18" fill="#F59E0B"/>
+  <text x="140" y="190" fill="#F9FAFB" font-family="Georgia, serif" font-size="72" font-weight="700">Dashboard Economia Brasileira</text>
+  <text x="140" y="252" fill="#D1D5DB" font-family="Arial, sans-serif" font-size="28">Indicadores, mapa e séries históricas com foco em Selic, IPCA, dólar e PIB.</text>
+  <rect x="140" y="308" width="208" height="124" rx="24" fill="#1F2937"/>
+  <rect x="370" y="308" width="208" height="124" rx="24" fill="#1F2937"/>
+  <rect x="600" y="308" width="208" height="124" rx="24" fill="#1F2937"/>
+  <text x="168" y="348" fill="#9CA3AF" font-family="Arial, sans-serif" font-size="20" font-weight="700">SELIC</text>
+  <text x="168" y="394" fill="#F9FAFB" font-family="Georgia, serif" font-size="44" font-weight="700">14,75%</text>
+  <text x="398" y="348" fill="#9CA3AF" font-family="Arial, sans-serif" font-size="20" font-weight="700">IPCA 12M</text>
+  <text x="398" y="394" fill="#F9FAFB" font-family="Georgia, serif" font-size="44" font-weight="700">3,75%</text>
+  <text x="628" y="348" fill="#9CA3AF" font-family="Arial, sans-serif" font-size="20" font-weight="700">PIB</text>
+  <text x="628" y="394" fill="#F9FAFB" font-family="Georgia, serif" font-size="44" font-weight="700">R$ 10,94 tri</text>
+  <text x="140" y="522" fill="#9CA3AF" font-family="Arial, sans-serif" font-size="22">Recharts para gráficos • D3 para mapa • TanStack Query + Zustand</text>
+</svg>
