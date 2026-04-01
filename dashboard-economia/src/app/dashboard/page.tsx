@@ -4,12 +4,11 @@ import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
 
 import { IndicatorToggle } from '@/components/filters/indicator-toggle';
-import { DashboardShell } from '@/components/layout/dashboard-shell';
 import { SummaryCards } from '@/components/cards/summary-cards';
+import { DashboardShell } from '@/components/layout/dashboard-shell';
 import { Button } from '@/components/ui/button';
 import { ChartSkeleton, MapSkeleton, TableSkeleton } from '@/components/ui/skeleton';
 import {
-  useCdiSeries,
   useDolarSeries,
   useIpcaSeries,
   useMapData,
@@ -19,7 +18,7 @@ import {
   useSummaryCards,
 } from '@/hooks/use-economia';
 import { useHistoricalTable } from '@/hooks/use-historical-table';
-import type { ApiError } from '@/lib/api';
+import { useDashboardStore } from '@/store/dashboard-store';
 import type { SeriePoint } from '@/types/economia';
 
 const MultiLineChart = dynamic(
@@ -78,33 +77,31 @@ const HistoricalTable = dynamic(
 );
 
 export default function DashboardPage() {
+  const activeIndicators = useDashboardStore((state) => state.activeIndicators);
   const summary = useSummaryCards();
   const selic = useSelicSeries();
   const ipca = useIpcaSeries();
   const dolar = useDolarSeries();
-  const cdi = useCdiSeries();
   const pibEstados = usePibEstados();
   const pibSetores = usePibSetores();
   const mapa = useMapData();
   const historical = useHistoricalTable();
 
   const mergedSeries = useMemo(
-    () =>
-      mergeSeries(
-        selic.data?.data,
-        ipca.data?.data,
-        dolar.data?.data,
-        cdi.data?.data,
-      ),
-    [cdi.data?.data, dolar.data?.data, ipca.data?.data, selic.data?.data],
+    () => mergeSeries(selic.data?.data, ipca.data?.data),
+    [ipca.data?.data, selic.data?.data],
+  );
+  const dolarSeries = useMemo(
+    () => mergeSeries(undefined, undefined, dolar.data?.data),
+    [dolar.data?.data],
   );
 
-  const lineChartLoading =
-    selic.isLoading || ipca.isLoading || dolar.isLoading || cdi.isLoading;
+  const lineChartLoading = selic.isLoading || ipca.isLoading;
   const lineChartHasData = mergedSeries.length > 0;
   const hasLineChartError =
-    !lineChartHasData &&
-    [selic, ipca, dolar, cdi].every((query) => query.isError);
+    !lineChartHasData && [selic, ipca].every((query) => query.isError);
+  const dolarChartLoading = dolar.isLoading;
+  const hasDolarChartError = !dolarSeries.length && dolar.isError;
 
   return (
     <DashboardShell>
@@ -117,19 +114,42 @@ export default function DashboardPage() {
 
       <section className="space-y-4">
         <IndicatorToggle />
-        {hasLineChartError ? (
-          <SectionError
-            title="Não foi possível carregar o gráfico de indicadores."
-            onRetry={() => {
-              void selic.refetch();
-              void ipca.refetch();
-              void dolar.refetch();
-              void cdi.refetch();
-            }}
-          />
-        ) : (
-          <MultiLineChart data={mergedSeries} isLoading={lineChartLoading} />
-        )}
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          {hasLineChartError ? (
+            <SectionError
+              title="Não foi possível carregar o gráfico comparativo."
+              onRetry={() => {
+                void selic.refetch();
+                void ipca.refetch();
+              }}
+            />
+          ) : (
+            <MultiLineChart
+              data={mergedSeries}
+              isLoading={lineChartLoading}
+              indicators={activeIndicators}
+              eyebrow="Indicadores percentuais"
+              title="Evolução comparada"
+              description="Comparação temporal entre Selic e IPCA."
+            />
+          )}
+
+          {hasDolarChartError ? (
+            <SectionError
+              title="Não foi possível carregar a cotação do dólar."
+              onRetry={() => void dolar.refetch()}
+            />
+          ) : (
+            <MultiLineChart
+              data={dolarSeries}
+              isLoading={dolarChartLoading}
+              indicators={['dolar']}
+              eyebrow="Cotação no tempo"
+              title="Cotação do dólar (R$/US$)"
+              description="Evolução do dólar ao longo do tempo."
+            />
+          )}
+        </div>
       </section>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -180,6 +200,7 @@ export default function DashboardPage() {
         <HistoricalTable
           data={historical.data}
           isLoading={historical.isLoading}
+          unavailableSeries={historical.unavailableSeries}
         />
       )}
     </DashboardShell>
@@ -189,8 +210,8 @@ export default function DashboardPage() {
 function mergeSeries(
   selic: SeriePoint[] | undefined,
   ipca: SeriePoint[] | undefined,
-  dolar: SeriePoint[] | undefined,
-  cdi: SeriePoint[] | undefined,
+  dolar?: SeriePoint[] | undefined,
+  cdi?: SeriePoint[] | undefined,
 ) {
   const merged = new Map<
     string,

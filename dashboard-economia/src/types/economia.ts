@@ -30,6 +30,7 @@ export interface PibSetor {
   setor: string;
   valor: number;
   percentual: number;
+  anoReferencia: number;
 }
 
 export interface MapaResponse {

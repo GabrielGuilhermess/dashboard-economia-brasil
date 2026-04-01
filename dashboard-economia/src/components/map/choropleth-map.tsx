@@ -14,6 +14,7 @@ type FeatureWithCodarea = GeoJSON.Feature<
   GeoJSON.Geometry,
   GeoJSON.GeoJsonProperties & { codarea?: string }
 >;
+type Position = [number, number];
 
 interface TooltipState {
   visible: boolean;
@@ -52,12 +53,12 @@ export function ChoroplethMap({
       return;
     }
 
+    const normalizedGeojson = normalizeGeoJsonForD3(geojson);
     const containerWidth = containerRef.current.getBoundingClientRect().width;
     const width = Math.max(containerWidth, 320);
-    const height = Math.min(width * 1.1, 500);
+    const padding = 10;
     const svg = select(svgRef.current);
     svg.selectAll('*').remove();
-    svg.attr('viewBox', `0 0 ${width} ${height}`);
 
     const styles = getComputedStyle(document.documentElement);
     const colorRange = [
@@ -72,16 +73,29 @@ export function ChoroplethMap({
     const colorScale = scaleQuantile<string>()
       .domain(values)
       .range(colorRange);
-    const projection = geoMercator().fitSize([width - 20, height - 20], geojson);
+    const projection = geoMercator().fitWidth(
+      width - padding * 2,
+      normalizedGeojson,
+    );
     const pathGenerator = geoPath(projection);
-    const features = geojson.features as FeatureWithCodarea[];
+    const features = normalizedGeojson.features as FeatureWithCodarea[];
+    const [[minX, minY], [maxX, maxY]] = pathGenerator.bounds(normalizedGeojson);
+    const height = Math.max(maxY - minY + padding * 2, 320);
+    const translateX = padding - minX;
+    const translateY = padding - minY;
+
+    svg
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet')
+      .style('width', '100%')
+      .style('height', 'auto');
 
     svg
       .selectAll<SVGPathElement, FeatureWithCodarea>('path')
       .data(features)
       .join('path')
       .attr('d', (feature: FeatureWithCodarea) => pathGenerator(feature) ?? '')
-      .attr('transform', 'translate(10, 10)')
+      .attr('transform', `translate(${translateX}, ${translateY})`)
       .attr('fill', (feature: FeatureWithCodarea) => {
         const item = dataMap.get(feature.properties?.codarea ?? '');
         return item ? colorScale(item.pibPerCapita) : 'var(--color-bg-tertiary)';
@@ -156,7 +170,13 @@ export function ChoroplethMap({
       </div>
 
       <div ref={containerRef} className="relative">
-        <svg ref={svgRef} className="h-[420px] w-full" role="img" aria-label="Mapa do PIB per capita por estado" />
+        <svg
+          ref={svgRef}
+          className="block h-auto w-full"
+          role="img"
+          aria-label="Mapa do PIB per capita por estado"
+          preserveAspectRatio="xMidYMid meet"
+        />
 
         {tooltip.visible ? (
           <div
@@ -216,3 +236,70 @@ export function ChoroplethMap({
 }
 
 ChoroplethMap.displayName = 'ChoroplethMap';
+
+function normalizeGeoJsonForD3(
+  featureCollection: GeoJSON.FeatureCollection,
+): GeoJSON.FeatureCollection {
+  return {
+    ...featureCollection,
+    features: featureCollection.features.map((feature) => ({
+      ...feature,
+      geometry: normalizeGeometryForD3(feature.geometry),
+    })),
+  };
+}
+
+function normalizeGeometryForD3(
+  geometry: GeoJSON.Geometry,
+): GeoJSON.Geometry {
+  if (geometry.type === 'Polygon') {
+    return {
+      ...geometry,
+      coordinates: normalizePolygonRings(geometry.coordinates as Position[][]),
+    };
+  }
+
+  if (geometry.type === 'MultiPolygon') {
+    return {
+      ...geometry,
+      coordinates: (geometry.coordinates as Position[][][]).map(
+        normalizePolygonRings,
+      ),
+    };
+  }
+
+  return geometry;
+}
+
+function normalizePolygonRings(rings: Position[][]): Position[][] {
+  return rings.map((ring, index) =>
+    normalizeRingWinding(ring, index === 0 ? 'clockwise' : 'counterclockwise'),
+  );
+}
+
+function normalizeRingWinding(
+  ring: Position[],
+  direction: 'clockwise' | 'counterclockwise',
+): Position[] {
+  const signedArea = getSignedArea(ring);
+  const isClockwise = signedArea < 0;
+  const shouldBeClockwise = direction === 'clockwise';
+
+  if (isClockwise === shouldBeClockwise) {
+    return ring;
+  }
+
+  return [...ring].reverse();
+}
+
+function getSignedArea(ring: Position[]): number {
+  let area = 0;
+
+  for (let index = 0; index < ring.length - 1; index += 1) {
+    const [x1, y1] = ring[index];
+    const [x2, y2] = ring[index + 1];
+    area += (x1 * y2) - (x2 * y1);
+  }
+
+  return area / 2;
+}

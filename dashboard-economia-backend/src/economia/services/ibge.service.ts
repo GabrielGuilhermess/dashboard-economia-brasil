@@ -39,8 +39,6 @@ const UF_BY_IBGE_CODE: Record<string, string> = {
   '53': 'DF',
 };
 
-const LATEST_SECTOR_YEAR = 2021;
-
 @Injectable()
 export class IbgeService {
   constructor(private readonly httpService: HttpService) {}
@@ -80,7 +78,7 @@ export class IbgeService {
   async fetchPibPorSetor(): Promise<PibSetorDto[]> {
     const url =
       `${API_SOURCES.ibgeAgregados.baseUrl}/` +
-      `${API_SOURCES.ibgeAgregados.tabelas.PIB_UF}/periodos/${LATEST_SECTOR_YEAR}` +
+      `${API_SOURCES.ibgeAgregados.tabelas.PIB_UF}/periodos/-10` +
       '/variaveis/513|517|6575|525?localidades=N1[1]';
 
     try {
@@ -91,12 +89,27 @@ export class IbgeService {
       );
 
       const byVariable = new Map(
-        response.data.map((item) => [item.id, this.extractFirstSeriesValue(item)]),
+        response.data.map((item) => [item.id, this.extractSerie(item)]),
       );
-      const agro = byVariable.get('513');
-      const industria = byVariable.get('517');
-      const servicosPrivados = byVariable.get('6575');
-      const servicosPublicos = byVariable.get('525');
+      const referenceYear = this.extractLatestCommonNumericPeriod([
+        byVariable.get('513'),
+        byVariable.get('517'),
+        byVariable.get('6575'),
+        byVariable.get('525'),
+      ]);
+      const agro = this.extractSerieValueForPeriod(byVariable.get('513'), referenceYear);
+      const industria = this.extractSerieValueForPeriod(
+        byVariable.get('517'),
+        referenceYear,
+      );
+      const servicosPrivados = this.extractSerieValueForPeriod(
+        byVariable.get('6575'),
+        referenceYear,
+      );
+      const servicosPublicos = this.extractSerieValueForPeriod(
+        byVariable.get('525'),
+        referenceYear,
+      );
 
       if (
         agro === undefined ||
@@ -117,16 +130,19 @@ export class IbgeService {
           setor: 'Servicos',
           valor: servicos / 1000,
           percentual: (servicos / total) * 100,
+          anoReferencia: referenceYear,
         },
         {
           setor: 'Industria',
           valor: industria / 1000,
           percentual: (industria / total) * 100,
+          anoReferencia: referenceYear,
         },
         {
           setor: 'Agropecuaria',
           valor: agro / 1000,
           percentual: (agro / total) * 100,
+          anoReferencia: referenceYear,
         },
       ];
     } catch (error: unknown) {
@@ -187,7 +203,7 @@ export class IbgeService {
   }> {
     const url =
       `${API_SOURCES.ibgeAgregados.baseUrl}/` +
-      `${API_SOURCES.ibgeAgregados.tabelas.PIB_UF}/periodos/2022|2023/variaveis/37?localidades=N1[1]`;
+      `${API_SOURCES.ibgeAgregados.tabelas.PIB_UF}/periodos/-10/variaveis/37?localidades=N1[1]`;
 
     try {
       const response = await firstValueFrom(
@@ -238,10 +254,7 @@ export class IbgeService {
   }
 
   private extractLastSerieValue(serie: Record<string, string>): number {
-    const lastEntry = Object.entries(serie)
-      .filter(([, value]) => this.isNumericValue(value))
-      .sort(([leftPeriod], [rightPeriod]) => leftPeriod.localeCompare(rightPeriod))
-      .at(-1);
+    const lastEntry = this.getNumericSerieEntries(serie).at(-1);
 
     if (!lastEntry) {
       throw new ServiceUnavailableException(
@@ -252,7 +265,7 @@ export class IbgeService {
     return Number.parseInt(lastEntry[1], 10);
   }
 
-  private extractFirstSeriesValue(item: IbgeAgregadoRaw): number {
+  private extractSerie(item: IbgeAgregadoRaw): Record<string, string> {
     const serie = item.resultados.at(0)?.series.at(0)?.serie;
 
     if (!serie) {
@@ -261,7 +274,51 @@ export class IbgeService {
       );
     }
 
-    return this.extractLastSerieValue(serie);
+    return serie;
+  }
+
+  private extractSerieValueForPeriod(
+    serie: Record<string, string> | undefined,
+    period: number,
+  ): number | undefined {
+    const rawValue = serie?.[String(period)];
+
+    if (!rawValue || !this.isNumericValue(rawValue)) {
+      return undefined;
+    }
+
+    return Number.parseInt(rawValue, 10);
+  }
+
+  private extractLatestCommonNumericPeriod(
+    series: Array<Record<string, string> | undefined>,
+  ): number {
+    const periods = series
+      .filter((serie): serie is Record<string, string> => Boolean(serie))
+      .flatMap((serie) => this.getNumericSerieEntries(serie).map(([period]) => period));
+    const uniquePeriods = [...new Set(periods)].sort();
+
+    for (let index = uniquePeriods.length - 1; index >= 0; index -= 1) {
+      const period = uniquePeriods[index];
+      const isAvailableInAllSeries = series.every((serie) => {
+        const rawValue = serie?.[period];
+        return rawValue ? this.isNumericValue(rawValue) : false;
+      });
+
+      if (isAvailableInAllSeries) {
+        return Number(period);
+      }
+    }
+
+    throw new ServiceUnavailableException(
+      'Erro na fonte: IBGE Agregados (periodo indisponivel)',
+    );
+  }
+
+  private getNumericSerieEntries(serie: Record<string, string>) {
+    return Object.entries(serie)
+      .filter(([, value]) => this.isNumericValue(value))
+      .sort(([leftPeriod], [rightPeriod]) => leftPeriod.localeCompare(rightPeriod));
   }
 
   private isNumericValue(value: string): boolean {

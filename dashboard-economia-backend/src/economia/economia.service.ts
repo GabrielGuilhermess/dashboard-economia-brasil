@@ -64,6 +64,7 @@ export class EconomiaService {
           pibBrasil,
         ] = await Promise.all([
           this.bcbService.fetchLatestValue(API_SOURCES.bcbSgs.series.SELIC_META),
+          // O card de dolar usa PTAX; grafico e tabela seguem a serie SGS 1.
           this.bcbService.fetchPtaxDia(),
           this.bcbService.fetchPtaxDia(this.subtractMonths(now, 1)),
           this.bcbService.fetchSeries(API_SOURCES.bcbSgs.series.IPCA_MENSAL, ipcaStart, now),
@@ -118,7 +119,7 @@ export class EconomiaService {
             value: this.formatTri(pibCurrent),
             unit: 'R$ tri',
             change: pibVariation,
-            changeLabel: 'vs ano anterior',
+            changeLabel: `vs ${pibBrasil.previous.year}`,
             invertSentiment: false,
             color: 'amber',
           },
@@ -324,12 +325,8 @@ export class EconomiaService {
 
   private normalizeSeriesForPeriod(
     series: SeriePointDto[],
-    period: PeriodFilter,
+    _period: PeriodFilter,
   ): SeriePointDto[] {
-    if (period === '1M' || period === '6M') {
-      return series;
-    }
-
     const lastValueByMonth = new Map<string, SeriePointDto>();
 
     for (const point of series) {
@@ -337,9 +334,12 @@ export class EconomiaService {
       lastValueByMonth.set(monthKey, point);
     }
 
-    return [...lastValueByMonth.values()].sort((left, right) =>
-      left.date.localeCompare(right.date),
-    );
+    return [...lastValueByMonth.entries()]
+      .sort(([leftMonth], [rightMonth]) => leftMonth.localeCompare(rightMonth))
+      .map(([monthKey, point]) => ({
+        date: `${monthKey}-01`,
+        value: point.value,
+      }));
   }
 
   private getStartDate(period: PeriodFilter): Date {
@@ -347,10 +347,12 @@ export class EconomiaService {
 
     switch (period) {
       case '1M':
+        date.setDate(1);
         date.setMonth(date.getMonth() - 1);
         break;
       case '6M':
-        date.setMonth(date.getMonth() - 6);
+        date.setDate(1);
+        date.setMonth(date.getMonth() - 5);
         break;
       case '1Y':
         date.setFullYear(date.getFullYear() - 1);

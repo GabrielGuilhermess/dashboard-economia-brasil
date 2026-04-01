@@ -24,17 +24,17 @@ function useEconomiaQuery<T>(
   options: UseQueryOptions<ApiResponse<T>, ApiError>,
   mockResponse: ApiResponse<T>,
 ): UseQueryResult<ApiResponse<T>, ApiError> {
-  if (USE_MOCKS) {
-    return useQuery<ApiResponse<T>, ApiError>({
-      queryKey: options.queryKey,
-      queryFn: async () => mockResponse,
-      staleTime: Infinity,
-      gcTime: Infinity,
-      retry: false,
-    });
-  }
+  const queryOptions = USE_MOCKS
+    ? {
+        queryKey: options.queryKey,
+        queryFn: async () => mockResponse,
+        staleTime: Infinity,
+        gcTime: Infinity,
+        retry: false,
+      }
+    : options;
 
-  return useQuery<ApiResponse<T>, ApiError>(options);
+  return useQuery<ApiResponse<T>, ApiError>(queryOptions);
 }
 
 export function useSummaryCards() {

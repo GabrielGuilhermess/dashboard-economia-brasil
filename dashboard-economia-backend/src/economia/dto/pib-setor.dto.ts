@@ -9,4 +9,7 @@ export class PibSetorDto {
 
   @Expose()
   percentual!: number;
+
+  @Expose()
+  anoReferencia!: number;
 }
