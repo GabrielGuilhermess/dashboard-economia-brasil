@@ -8,7 +8,7 @@ export const API_SOURCES = {
       IPCA_MENSAL: 433,
       DOLAR_VENDA: 1,
       CDI: 4389,
-      DESEMPREGO: 24363,
+      DESEMPREGO: 24369,
     },
     timeout: Number(process.env.API_TIMEOUT_MS) || 10_000,
   },

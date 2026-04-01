@@ -29,26 +29,48 @@ import type { HistoricalRow } from '@/types/economia';
 export interface HistoricalTableProps {
   data?: HistoricalRow[];
   isLoading?: boolean;
+  unavailableSeries?: Array<keyof Omit<HistoricalRow, 'date'>>;
 }
 
 export function HistoricalTable({
   data,
   isLoading = false,
+  unavailableSeries = [],
 }: HistoricalTableProps) {
   if (isLoading || !data) {
     return <TableSkeleton />;
   }
 
-  return <HistoricalTableContent data={data} />;
+  return (
+    <HistoricalTableContent
+      data={data}
+      unavailableSeries={unavailableSeries}
+    />
+  );
 }
 
 HistoricalTable.displayName = 'HistoricalTable';
 
 interface HistoricalTableContentProps {
   data: HistoricalRow[];
+  unavailableSeries: Array<keyof Omit<HistoricalRow, 'date'>>;
 }
 
-function HistoricalTableContent({ data }: HistoricalTableContentProps) {
+const HISTORICAL_SERIES_LABELS: Record<
+  keyof Omit<HistoricalRow, 'date'>,
+  string
+> = {
+  selic: 'Selic',
+  ipca: 'IPCA',
+  dolar: 'Dólar',
+  cdi: 'CDI',
+  desemprego: 'Desemprego',
+};
+
+function HistoricalTableContent({
+  data,
+  unavailableSeries,
+}: HistoricalTableContentProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns: ColumnDef<HistoricalRow>[] = [
@@ -119,6 +141,18 @@ function HistoricalTableContent({ data }: HistoricalTableContentProps) {
             Série histórica
           </p>
           <h2 className="mt-2 text-2xl font-semibold">Indicadores consolidados</h2>
+          <p className="mt-2 text-sm text-text-secondary">
+            Dólar no card: PTAX. Na tabela: série 1 do SGS.
+          </p>
+          {unavailableSeries.length > 0 ? (
+            <p className="mt-2 text-sm text-text-secondary">
+              Dados indisponíveis para{' '}
+              {unavailableSeries
+                .map((series) => HISTORICAL_SERIES_LABELS[series])
+                .join(', ')}
+              . A tabela continua com as séries disponíveis.
+            </p>
+          ) : null}
         </div>
         <Button
           variant="secondary"

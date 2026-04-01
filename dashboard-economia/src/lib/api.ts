@@ -27,7 +27,7 @@ export const BCB_SERIES = {
   IPCA_MENSAL: 433,
   DOLAR_VENDA: 1,
   CDI: 4389,
-  DESEMPREGO: 24363,
+  DESEMPREGO: 24369,
 } as const;
 
 export const INDICATOR_CONFIG: Record<
@@ -52,7 +52,7 @@ export const INDICATOR_CONFIG: Record<
     axis: 'left',
   },
   dolar: {
-    label: 'Dolar',
+    label: 'Dólar',
     color: 'var(--chart-dolar)',
     unit: 'R$',
     axis: 'right',

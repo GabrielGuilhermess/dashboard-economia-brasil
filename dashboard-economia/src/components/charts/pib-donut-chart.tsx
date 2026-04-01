@@ -34,6 +34,7 @@ export function PibDonutChart({
   }
 
   const activeSector = data[activeIndex] ?? data[0];
+  const referenceYear = data[0]?.anoReferencia;
 
   return (
     <div className="card rounded-[1.75rem] p-6">
@@ -42,6 +43,9 @@ export function PibDonutChart({
           Composição setorial
         </p>
         <h2 className="mt-2 text-2xl font-semibold">PIB por setor</h2>
+        {referenceYear ? (
+          <p className="mt-2 text-sm text-text-secondary">ref. {referenceYear}</p>
+        ) : null}
       </div>
 
       <div className="h-80">

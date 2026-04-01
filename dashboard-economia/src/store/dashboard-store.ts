@@ -18,7 +18,15 @@ interface DashboardState {
   setHoveredUF: (uf: string | null) => void;
 }
 
-const DEFAULT_INDICATORS: Indicator[] = ['selic', 'ipca', 'dolar', 'cdi'];
+const DEFAULT_INDICATORS: Indicator[] = ['selic', 'ipca'];
+
+function normalizeActiveIndicators(indicators?: Indicator[]): Indicator[] {
+  const filteredIndicators = (indicators ?? []).filter((indicator) =>
+    DEFAULT_INDICATORS.includes(indicator),
+  );
+
+  return filteredIndicators.length > 0 ? filteredIndicators : DEFAULT_INDICATORS;
+}
 
 function applyTheme(theme: Theme): void {
   if (typeof document === 'undefined') {
@@ -46,7 +54,7 @@ export const useDashboardStore = create<DashboardState>()(
       },
       setPeriod: (period) => set({ period }),
       toggleIndicator: (indicator) => {
-        const currentIndicators = get().activeIndicators;
+        const currentIndicators = normalizeActiveIndicators(get().activeIndicators);
         const nextIndicators = currentIndicators.includes(indicator)
           ? currentIndicators.filter((item) => item !== indicator)
           : [...currentIndicators, indicator];
@@ -55,16 +63,27 @@ export const useDashboardStore = create<DashboardState>()(
           return;
         }
 
-        set({ activeIndicators: nextIndicators });
+        set({ activeIndicators: normalizeActiveIndicators(nextIndicators) });
       },
       setIndicators: (indicators) =>
         set({
-          activeIndicators: indicators.length > 0 ? indicators : [DEFAULT_INDICATORS[0]],
+          activeIndicators: normalizeActiveIndicators(indicators),
         }),
       setHoveredUF: (hoveredUF) => set({ hoveredUF }),
     }),
     {
       name: 'dashboard-economia-ui',
+      merge: (persistedState, currentState) => {
+        const typedPersistedState = persistedState as Partial<DashboardState> | undefined;
+
+        return {
+          ...currentState,
+          ...typedPersistedState,
+          activeIndicators: normalizeActiveIndicators(
+            typedPersistedState?.activeIndicators,
+          ),
+        };
+      },
       partialize: (state) => ({
         theme: state.theme,
         period: state.period,

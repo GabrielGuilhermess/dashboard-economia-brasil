@@ -117,17 +117,18 @@ export const MOCK_CDI_SERIES: SeriePoint[] = [
 ];
 
 export const MOCK_DESEMPREGO_SERIES: SeriePoint[] = [
-  { date: '2025-03-01', value: 11.415777 },
-  { date: '2025-04-01', value: 11.257908 },
-  { date: '2025-05-01', value: 10.858962 },
-  { date: '2025-06-01', value: 10.736257 },
-  { date: '2025-07-01', value: 11.317795 },
-  { date: '2025-08-01', value: 11.040478 },
-  { date: '2025-09-01', value: 10.945899 },
-  { date: '2025-10-01', value: 11.013427 },
-  { date: '2025-11-01', value: 10.67705 },
-  { date: '2025-12-01', value: 10.720972 },
-  { date: '2026-01-01', value: 10.389572 },
+  { date: '2025-03-01', value: 7.0 },
+  { date: '2025-04-01', value: 6.6 },
+  { date: '2025-05-01', value: 6.2 },
+  { date: '2025-06-01', value: 5.8 },
+  { date: '2025-07-01', value: 5.6 },
+  { date: '2025-08-01', value: 5.6 },
+  { date: '2025-09-01', value: 5.6 },
+  { date: '2025-10-01', value: 5.4 },
+  { date: '2025-11-01', value: 5.2 },
+  { date: '2025-12-01', value: 5.1 },
+  { date: '2026-01-01', value: 5.4 },
+  { date: '2026-02-01', value: 5.8 },
 ];
 
 export const MOCK_PIB_ESTADOS: PibEstado[] = [
@@ -161,9 +162,9 @@ export const MOCK_PIB_ESTADOS: PibEstado[] = [
 ];
 
 export const MOCK_PIB_SETORES: PibSetor[] = [
-  { setor: 'Serviços', valor: 5129115, percentual: 66.49099902657494 },
-  { setor: 'Indústria', valor: 1993799, percentual: 25.8465032209623 },
-  { setor: 'Agropecuária', valor: 591085, percentual: 7.662497752462763 },
+  { setor: 'Serviços', valor: 5129115, percentual: 66.49099902657494, anoReferencia: 2021 },
+  { setor: 'Indústria', valor: 1993799, percentual: 25.8465032209623, anoReferencia: 2021 },
+  { setor: 'Agropecuária', valor: 591085, percentual: 7.662497752462763, anoReferencia: 2021 },
 ];
 
 export const MOCK_MAPA_ESTADOS: MapaUFData[] = [

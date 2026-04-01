@@ -18,8 +18,6 @@ const INDICATORS: Array<{
 }> = [
   { value: 'selic', label: 'Selic', colorClass: 'bg-chart-selic' },
   { value: 'ipca', label: 'IPCA', colorClass: 'bg-chart-ipca' },
-  { value: 'dolar', label: 'Dólar', colorClass: 'bg-chart-dolar' },
-  { value: 'cdi', label: 'CDI', colorClass: 'bg-chart-cdi' },
 ];
 
 export function IndicatorToggle({ className }: IndicatorToggleProps) {

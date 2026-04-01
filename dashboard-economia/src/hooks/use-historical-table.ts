@@ -11,10 +11,14 @@ import {
 } from '@/hooks/use-economia';
 import type { HistoricalRow } from '@/types/economia';
 
+type HistoricalIndicator = keyof Omit<HistoricalRow, 'date'>;
+
 export function useHistoricalTable(): {
   data: HistoricalRow[];
   isLoading: boolean;
   isError: boolean;
+  isPartialError: boolean;
+  unavailableSeries: HistoricalIndicator[];
   errors: Record<string, Error | null>;
 } {
   const selic = useSelicSeries();
@@ -71,14 +75,31 @@ export function useHistoricalTable(): {
     cdi.isLoading ||
     desemprego.isLoading;
 
-  const failedQueries = [selic, ipca, dolar, cdi, desemprego].filter(
-    (query) => query.isError,
-  );
+  const queriesByIndicator: Record<
+    HistoricalIndicator,
+    typeof selic
+  > = {
+    selic,
+    ipca,
+    dolar,
+    cdi,
+    desemprego,
+  };
+  const unavailableSeries = (
+    Object.entries(queriesByIndicator) as Array<
+      [HistoricalIndicator, typeof selic]
+    >
+  )
+    .filter(([, query]) => query.isError)
+    .map(([indicator]) => indicator);
 
   return {
     data,
     isLoading,
-    isError: failedQueries.length === 5,
+    isError: unavailableSeries.length === 5,
+    isPartialError:
+      unavailableSeries.length > 0 && unavailableSeries.length < 5,
+    unavailableSeries,
     errors: {
       selic: selic.error ?? null,
       ipca: ipca.error ?? null,

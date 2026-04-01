@@ -16,7 +16,7 @@ describe('utils', () => {
   });
 
   it('formats compact monetary values', () => {
-    expect(formatCompact(2_800_000_000_000)).toBe('R$ 2.8 tri');
+    expect(formatCompact(2_800_000_000_000)).toBe('R$ 2,8 tri');
     expect(formatCompact(350_000_000_000)).toBe('R$ 350 bi');
   });
 

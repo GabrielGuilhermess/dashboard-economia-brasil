@@ -31,6 +31,10 @@ export interface MultiSeriePoint {
 export interface MultiLineChartProps {
   data?: MultiSeriePoint[];
   isLoading?: boolean;
+  indicators?: Indicator[];
+  eyebrow?: string;
+  title?: string;
+  description?: string;
 }
 
 const indicators: Indicator[] = ['selic', 'ipca', 'dolar', 'cdi'];
@@ -38,9 +42,20 @@ const indicators: Indicator[] = ['selic', 'ipca', 'dolar', 'cdi'];
 export function MultiLineChart({
   data,
   isLoading = false,
+  indicators: visibleIndicators,
+  eyebrow = 'Indicadores selecionados',
+  title = 'Evolução comparada',
+  description,
 }: MultiLineChartProps) {
   const activeIndicators = useDashboardStore((state) => state.activeIndicators);
   const period = useDashboardStore((state) => state.period);
+  const indicatorsToRender = visibleIndicators ?? activeIndicators;
+  const hasPercentAxis = indicatorsToRender.some(
+    (indicator) => INDICATOR_CONFIG[indicator].axis === 'left',
+  );
+  const hasCurrencyAxis = indicatorsToRender.some(
+    (indicator) => INDICATOR_CONFIG[indicator].axis === 'right',
+  );
 
   if (isLoading || !data) {
     return <ChartSkeleton height={360} />;
@@ -50,9 +65,14 @@ export function MultiLineChart({
     <div className="card rounded-[1.75rem] p-6">
       <div className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-text-tertiary">
-          Indicadores selecionados
+          {eyebrow}
         </p>
-        <h2 className="mt-2 text-2xl font-semibold">Evolução comparada</h2>
+        <h2 className="mt-2 text-2xl font-semibold">{title}</h2>
+        {description ? (
+          <p className="mt-2 text-sm text-text-secondary">
+            {description}
+          </p>
+        ) : null}
       </div>
 
       <div className="h-72 sm:h-80">
@@ -71,28 +91,32 @@ export function MultiLineChart({
               axisLine={false}
               minTickGap={18}
             />
-            <YAxis
-              yAxisId="left"
-              tickFormatter={(value) => formatPercent(Number(value), 0)}
-              stroke="var(--color-text-tertiary)"
-              tickLine={false}
-              axisLine={false}
-              width={56}
-            />
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              tickFormatter={(value) => formatCurrency(Number(value), 2)}
-              stroke="var(--color-text-tertiary)"
-              tickLine={false}
-              axisLine={false}
-              width={72}
-            />
+            {hasPercentAxis ? (
+              <YAxis
+                yAxisId="left"
+                tickFormatter={(value) => formatPercent(Number(value), 0)}
+                stroke="var(--color-text-tertiary)"
+                tickLine={false}
+                axisLine={false}
+                width={56}
+              />
+            ) : null}
+            {hasCurrencyAxis ? (
+              <YAxis
+                yAxisId="right"
+                orientation={hasPercentAxis ? 'right' : 'left'}
+                tickFormatter={(value) => formatCurrency(Number(value), 2)}
+                stroke="var(--color-text-tertiary)"
+                tickLine={false}
+                axisLine={false}
+                width={72}
+              />
+            ) : null}
             <Tooltip content={<MultiLineTooltip />} />
-            <Legend />
+            {indicatorsToRender.length > 1 ? <Legend /> : null}
 
             {indicators
-              .filter((indicator) => activeIndicators.includes(indicator))
+              .filter((indicator) => indicatorsToRender.includes(indicator))
               .map((indicator) => {
                 const config = INDICATOR_CONFIG[indicator];
 
@@ -145,7 +169,7 @@ function MultiLineTooltip({
             />
             <span className="min-w-20 text-text-secondary">{item.name}</span>
             <span className="font-semibold text-text-primary">
-              {item.name === 'Dolar'
+              {item.name === INDICATOR_CONFIG.dolar.label
                 ? formatCurrency(Number(item.value))
                 : formatPercent(Number(item.value))}
             </span>

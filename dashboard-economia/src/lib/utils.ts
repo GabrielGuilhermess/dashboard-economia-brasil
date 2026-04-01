@@ -145,7 +145,7 @@ export function downloadFile(content: string, filename: string): void {
 }
 
 function formatCompactNumber(value: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('pt-BR', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 1,
   }).format(value);

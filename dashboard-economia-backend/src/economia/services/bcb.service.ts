@@ -49,6 +49,8 @@ export class BcbService {
   async fetchPtaxDia(
     referenceDate: Date = new Date(),
   ): Promise<{ cotacao: number; data: string }> {
+    let lastError: unknown;
+
     for (let offset = 0; offset < 5; offset += 1) {
       const date = new Date(referenceDate);
       date.setDate(referenceDate.getDate() - offset);
@@ -75,8 +77,12 @@ export class BcbService {
           };
         }
       } catch (error: unknown) {
-        throw this.buildSourceError('BCB PTAX', error);
+        lastError = error;
       }
+    }
+
+    if (lastError) {
+      throw this.buildSourceError('BCB PTAX', lastError);
     }
 
     throw new ServiceUnavailableException('Fonte indisponivel: BCB PTAX');
@@ -162,7 +168,8 @@ export class BcbService {
     const parsedValue = Number.parseFloat(rawValue);
 
     if (codigo === API_SOURCES.bcbSgs.series.DESEMPREGO) {
-      return parsedValue / 10;
+      // A taxa de desocupacao da serie 24369 ja vem em percentual no SGS.
+      return parsedValue;
     }
 
     return parsedValue;
