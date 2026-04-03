@@ -2,14 +2,19 @@ name: dashboard-economia-dev
 
 services:
   backend:
+    profiles:
+      - reference-backend
     build:
       context: ../dashboard-economia-backend
       dockerfile: Dockerfile.dev
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
     environment:
       HOST: 0.0.0.0
       PORT: ${BACKEND_PORT:-3001}
       CORS_ORIGIN: ${BACKEND_CORS_ORIGIN:-http://localhost:3000}
-      API_TIMEOUT_MS: ${API_TIMEOUT_MS:-10000}
+      API_TIMEOUT_MS: ${API_TIMEOUT_MS:-30000}
       CACHE_TTL_DEFAULT: ${CACHE_TTL_DEFAULT:-3600}
       CACHE_TTL_GEOJSON: ${CACHE_TTL_GEOJSON:-86400}
       BCB_SGS_BASE_URL: ${BCB_SGS_BASE_URL:-https://api.bcb.gov.br/dados/serie/bcdata.sgs}
@@ -41,21 +46,25 @@ services:
     build:
       context: ../dashboard-economia
       dockerfile: Dockerfile.dev
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
       NEXT_PUBLIC_USE_MOCKS: ${NEXT_PUBLIC_USE_MOCKS:-false}
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
+      API_TIMEOUT_MS: ${API_TIMEOUT_MS:-30000}
+      BCB_SGS_BASE_URL: ${BCB_SGS_BASE_URL:-https://api.bcb.gov.br/dados/serie/bcdata.sgs}
+      BCB_PTAX_BASE_URL: ${BCB_PTAX_BASE_URL:-https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata}
+      IBGE_AGREGADOS_BASE_URL: ${IBGE_AGREGADOS_BASE_URL:-https://servicodados.ibge.gov.br/api/v3/agregados}
+      IBGE_MALHAS_BASE_URL: ${IBGE_MALHAS_BASE_URL:-https://servicodados.ibge.gov.br/api/v3/malhas}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     volumes:
       - ../dashboard-economia:/app
       - frontend_node_modules:/app/node_modules
       - frontend_next:/app/.next
-    depends_on:
-      backend:
-        condition: service_healthy
     healthcheck:
       test:
         [

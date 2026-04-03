@@ -26,7 +26,7 @@ const summaryResponse: ApiResponse<SummaryCard[]> = {
 };
 
 describe('useSummaryCards', () => {
-  it('fetches summary cards from the API', async () => {
+  it('fetches summary cards from the static data snapshot', async () => {
     const fetchMock = jest.fn().mockResolvedValue({
       ok: true,
       json: async () => summaryResponse,
@@ -55,7 +55,7 @@ describe('useSummaryCards', () => {
     expect(result.current.data?.data[0]?.title).toBe('Selic Meta');
     expect(result.current.data?.meta.source).toBe('bcb-sgs');
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://127.0.0.1:3001/api/economia/summary',
+      '/data/summary.json',
       expect.objectContaining({
         method: 'GET',
       }),
