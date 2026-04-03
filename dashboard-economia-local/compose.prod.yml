@@ -1,55 +1,24 @@
 name: dashboard-economia-prod
 
 services:
-  backend:
-    build:
-      context: ../dashboard-economia-backend
-      dockerfile: Dockerfile
-    environment:
-      NODE_ENV: production
-      HOST: 0.0.0.0
-      PORT: ${BACKEND_PORT:-3001}
-      CORS_ORIGIN: ${BACKEND_CORS_ORIGIN:-http://localhost:3000}
-      API_TIMEOUT_MS: ${API_TIMEOUT_MS:-10000}
-      CACHE_TTL_DEFAULT: ${CACHE_TTL_DEFAULT:-3600}
-      CACHE_TTL_GEOJSON: ${CACHE_TTL_GEOJSON:-86400}
-      BCB_SGS_BASE_URL: ${BCB_SGS_BASE_URL:-https://api.bcb.gov.br/dados/serie/bcdata.sgs}
-      BCB_PTAX_BASE_URL: ${BCB_PTAX_BASE_URL:-https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata}
-      IBGE_AGREGADOS_BASE_URL: ${IBGE_AGREGADOS_BASE_URL:-https://servicodados.ibge.gov.br/api/v3/agregados}
-      IBGE_MALHAS_BASE_URL: ${IBGE_MALHAS_BASE_URL:-https://servicodados.ibge.gov.br/api/v3/malhas}
-    ports:
-      - "${BACKEND_PORT:-3001}:3001"
-    restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "fetch('http://127.0.0.1:3001/api/economia/summary').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1));",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-
   frontend:
     build:
       context: ../dashboard-economia
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
         NEXT_PUBLIC_USE_MOCKS: ${NEXT_PUBLIC_USE_MOCKS:-false}
+        API_TIMEOUT_MS: ${API_TIMEOUT_MS:-10000}
+        BCB_SGS_BASE_URL: ${BCB_SGS_BASE_URL:-https://api.bcb.gov.br/dados/serie/bcdata.sgs}
+        BCB_PTAX_BASE_URL: ${BCB_PTAX_BASE_URL:-https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata}
+        IBGE_AGREGADOS_BASE_URL: ${IBGE_AGREGADOS_BASE_URL:-https://servicodados.ibge.gov.br/api/v3/agregados}
+        IBGE_MALHAS_BASE_URL: ${IBGE_MALHAS_BASE_URL:-https://servicodados.ibge.gov.br/api/v3/malhas}
     environment:
       NODE_ENV: production
       HOSTNAME: 0.0.0.0
       PORT: 3000
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
-    depends_on:
-      backend:
-        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test:

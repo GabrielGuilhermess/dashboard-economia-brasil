@@ -6,7 +6,12 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query';
 
-import { ENDPOINTS, api, type ApiError } from '@/lib/api';
+import {
+  ENDPOINTS,
+  api,
+  getSeriesEndpoint,
+  type ApiError,
+} from '@/lib/api';
 import { MOCK_RESPONSES } from '@/lib/mock-data';
 import { useDashboardStore } from '@/store/dashboard-store';
 import type {
@@ -55,7 +60,7 @@ export function useSelicSeries() {
   return useEconomiaQuery<SeriePoint[]>(
     {
       queryKey: ['selic', period],
-      queryFn: () => api.get(`${ENDPOINTS.selic}?period=${period}`),
+      queryFn: () => api.get(getSeriesEndpoint('selic', period)),
       staleTime: 30 * 60 * 1000,
       gcTime: 60 * 60 * 1000,
     },
@@ -75,7 +80,7 @@ export function useIpcaSeries() {
   return useEconomiaQuery<SeriePoint[]>(
     {
       queryKey: ['ipca', period],
-      queryFn: () => api.get(`${ENDPOINTS.ipca}?period=${period}`),
+      queryFn: () => api.get(getSeriesEndpoint('ipca', period)),
       staleTime: 30 * 60 * 1000,
       gcTime: 60 * 60 * 1000,
     },
@@ -95,7 +100,7 @@ export function useDolarSeries() {
   return useEconomiaQuery<SeriePoint[]>(
     {
       queryKey: ['dolar', period],
-      queryFn: () => api.get(`${ENDPOINTS.dolar}?period=${period}`),
+      queryFn: () => api.get(getSeriesEndpoint('dolar', period)),
       staleTime: 30 * 60 * 1000,
       gcTime: 60 * 60 * 1000,
     },
@@ -115,7 +120,7 @@ export function useCdiSeries() {
   return useEconomiaQuery<SeriePoint[]>(
     {
       queryKey: ['cdi', period],
-      queryFn: () => api.get(`${ENDPOINTS.cdi}?period=${period}`),
+      queryFn: () => api.get(getSeriesEndpoint('cdi', period)),
       staleTime: 30 * 60 * 1000,
       gcTime: 60 * 60 * 1000,
     },
@@ -135,7 +140,7 @@ export function useDesempregoSeries() {
   return useEconomiaQuery<SeriePoint[]>(
     {
       queryKey: ['desemprego', period],
-      queryFn: () => api.get(`${ENDPOINTS.desemprego}?period=${period}`),
+      queryFn: () => api.get(getSeriesEndpoint('desemprego', period)),
       staleTime: 30 * 60 * 1000,
       gcTime: 60 * 60 * 1000,
     },

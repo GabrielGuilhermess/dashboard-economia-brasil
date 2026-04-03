@@ -1,4 +1,4 @@
-import type { ApiResponse, Indicator } from '@/types/economia';
+import type { ApiResponse, Indicator, PeriodFilter } from '@/types/economia';
 
 export class ApiError extends Error {
   constructor(
@@ -11,16 +11,18 @@ export class ApiError extends Error {
 }
 
 export const ENDPOINTS = {
-  summary: '/api/economia/summary',
-  selic: '/api/economia/selic',
-  ipca: '/api/economia/ipca',
-  dolar: '/api/economia/dolar',
-  cdi: '/api/economia/cdi',
-  desemprego: '/api/economia/desemprego',
-  pibEstados: '/api/economia/pib-estados',
-  pibSetores: '/api/economia/pib-setores',
-  mapa: '/api/economia/mapa',
+  summary: '/data/summary.json',
+  pibEstados: '/data/pib-estados.json',
+  pibSetores: '/data/pib-setores.json',
+  mapa: '/data/mapa.json',
 } as const;
+
+export function getSeriesEndpoint(
+  indicator: 'selic' | 'ipca' | 'dolar' | 'cdi' | 'desemprego',
+  period: PeriodFilter,
+): string {
+  return `/data/series/${indicator}-${period.toLowerCase()}.json`;
+}
 
 export const BCB_SERIES = {
   SELIC_META: 432,
@@ -65,8 +67,6 @@ export const INDICATOR_CONFIG: Record<
   },
 };
 
-const DEFAULT_API_URL = 'http://localhost:3001';
-
 export class ApiClient {
   constructor(private readonly baseUrl: string) {}
 
@@ -104,6 +104,10 @@ export class ApiClient {
       return endpoint;
     }
 
+    if (!this.baseUrl) {
+      return endpoint;
+    }
+
     const normalizedBaseUrl = this.baseUrl.endsWith('/')
       ? this.baseUrl.slice(0, -1)
       : this.baseUrl;
@@ -112,6 +116,4 @@ export class ApiClient {
   }
 }
 
-export const api = new ApiClient(
-  process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_URL,
-);
+export const api = new ApiClient('');

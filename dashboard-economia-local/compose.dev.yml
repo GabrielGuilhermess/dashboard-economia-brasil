@@ -42,7 +42,6 @@ services:
       context: ../dashboard-economia
       dockerfile: Dockerfile.dev
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
       NEXT_PUBLIC_USE_MOCKS: ${NEXT_PUBLIC_USE_MOCKS:-false}
       WATCHPACK_POLLING: "true"
@@ -53,9 +52,6 @@ services:
       - ../dashboard-economia:/app
       - frontend_node_modules:/app/node_modules
       - frontend_next:/app/.next
-    depends_on:
-      backend:
-        condition: service_healthy
     healthcheck:
       test:
         [

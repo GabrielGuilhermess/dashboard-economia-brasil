@@ -1,6 +1,6 @@
 # Dashboard Economia Local
 
-Camada de orquestracao local para `dashboard-economia/` e `dashboard-economia-backend/`.
+Camada de orquestracao local para `dashboard-economia/` e, quando necessario, `dashboard-economia-backend/`.
 
 ## Pre-requisitos
 
@@ -14,19 +14,23 @@ Camada de orquestracao local para `dashboard-economia/` e `dashboard-economia-ba
 
 ## Desenvolvimento
 
-Subir backend e frontend com hot reload:
+Subir frontend com hot reload e backend de referencia no mesmo ambiente local:
 
 ```bash
 docker compose --env-file .env -f compose.dev.yml up --build
 ```
 
+O frontend gera snapshots em `public/data/` antes de subir e passa a ler apenas esses arquivos estaticos.
+
 ## Producao local
 
-Buildar e subir backend e frontend em modo producao:
+Buildar e subir apenas o frontend estatico em modo producao:
 
 ```bash
 docker compose --env-file .env -f compose.prod.yml up --build -d
 ```
+
+Nesse fluxo o backend Nest nao participa do runtime. Os JSONs sao regenerados durante o build e o container final apenas serve os arquivos exportados.
 
 ## Derrubar
 
@@ -49,4 +53,12 @@ docker compose --env-file .env -f compose.prod.yml build --no-cache
 ## Endpoints locais
 
 - Frontend: `http://localhost:3000/dashboard`
-- Backend: `http://localhost:3001/api/economia/summary`
+- Dados estaticos: `http://localhost:3000/data/summary.json`
+- Backend de referencia em dev: `http://localhost:3001/api/economia/summary`
+
+## Producao estatica
+
+- Producao passa a depender apenas do build estatico do frontend e dos snapshots gerados em `public/data/`.
+- O backend Nest pode continuar no repositorio por um ciclo curto, mas fica fora do deploy de producao.
+- O redeploy horario deve ser acionado pelo workflow `.github/workflows/vercel-static-redeploy.yml`.
+- Configure o secret `VERCEL_DEPLOY_HOOK_URL` no GitHub com a URL do Deploy Hook do projeto no Vercel.
