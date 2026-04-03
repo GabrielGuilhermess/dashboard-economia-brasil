@@ -1,3 +1,5 @@
+const DEFAULT_API_TIMEOUT_MS = Number(process.env.API_TIMEOUT_MS) || 30_000;
+
 export const API_SOURCES = {
   bcbSgs: {
     baseUrl:
@@ -10,13 +12,13 @@ export const API_SOURCES = {
       CDI: 4389,
       DESEMPREGO: 24369,
     },
-    timeout: Number(process.env.API_TIMEOUT_MS) || 10_000,
+    timeout: DEFAULT_API_TIMEOUT_MS,
   },
   bcbPtax: {
     baseUrl:
       process.env.BCB_PTAX_BASE_URL ??
       'https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata',
-    timeout: Number(process.env.API_TIMEOUT_MS) || 10_000,
+    timeout: DEFAULT_API_TIMEOUT_MS,
   },
   ibgeAgregados: {
     baseUrl:
@@ -26,13 +28,13 @@ export const API_SOURCES = {
       PIB_UF: 5938,
       POPULACAO_UF: 6579,
     },
-    timeout: Number(process.env.API_TIMEOUT_MS) || 10_000,
+    timeout: DEFAULT_API_TIMEOUT_MS,
   },
   ibgeMalhas: {
     baseUrl:
       process.env.IBGE_MALHAS_BASE_URL ??
       'https://servicodados.ibge.gov.br/api/v3/malhas',
-    timeout: 15_000,
+    timeout: Math.max(DEFAULT_API_TIMEOUT_MS, 30_000),
   },
 };
 

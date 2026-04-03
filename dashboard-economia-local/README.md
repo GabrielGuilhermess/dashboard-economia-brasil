@@ -1,6 +1,6 @@
 # Dashboard Economia Local
 
-Camada de orquestracao local para `dashboard-economia/` e, quando necessario, `dashboard-economia-backend/`.
+Camada de orquestracao local para `dashboard-economia/` e, opcionalmente, `dashboard-economia-backend/` como referencia.
 
 ## Pre-requisitos
 
@@ -10,17 +10,24 @@ Camada de orquestracao local para `dashboard-economia/` e, quando necessario, `d
 ## Variaveis de ambiente
 
 1. Copie `dashboard-economia-local/.env.example` para `dashboard-economia-local/.env` se quiser ajustar portas, URLs ou timeouts.
-2. Use `dashboard-economia-backend/.env.example` e `dashboard-economia/.env.example` como referencia para execucao isolada de cada repositorio.
+2. Em Linux, ajuste `UID` e `GID` no `.env` com `id -u` e `id -g` para manter ownership coerente no bind mount do frontend.
+3. Use `dashboard-economia-backend/.env.example` e `dashboard-economia/.env.example` como referencia para execucao isolada de cada repositorio.
 
 ## Desenvolvimento
 
-Subir frontend com hot reload e backend de referencia no mesmo ambiente local:
+Subir somente o frontend com hot reload, snapshots locais e sem Nest no runtime:
 
 ```bash
 docker compose --env-file .env -f compose.dev.yml up --build
 ```
 
 O frontend gera snapshots em `public/data/` antes de subir e passa a ler apenas esses arquivos estaticos.
+
+Se quiser manter o backend Nest apenas como referencia durante a migracao local:
+
+```bash
+docker compose --env-file .env --profile reference-backend -f compose.dev.yml up --build
+```
 
 ## Producao local
 
@@ -54,7 +61,7 @@ docker compose --env-file .env -f compose.prod.yml build --no-cache
 
 - Frontend: `http://localhost:3000/dashboard`
 - Dados estaticos: `http://localhost:3000/data/summary.json`
-- Backend de referencia em dev: `http://localhost:3001/api/economia/summary`
+- Backend de referencia em dev: `http://localhost:3001/api/economia/summary` com o profile `reference-backend`
 
 ## Producao estatica
 

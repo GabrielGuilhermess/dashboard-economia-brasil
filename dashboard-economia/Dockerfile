@@ -13,7 +13,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ARG NEXT_PUBLIC_USE_MOCKS=false
-ARG API_TIMEOUT_MS=10000
+ARG API_TIMEOUT_MS=30000
 ARG BCB_SGS_BASE_URL=https://api.bcb.gov.br/dados/serie/bcdata.sgs
 ARG BCB_PTAX_BASE_URL=https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata
 ARG IBGE_AGREGADOS_BASE_URL=https://servicodados.ibge.gov.br/api/v3/agregados

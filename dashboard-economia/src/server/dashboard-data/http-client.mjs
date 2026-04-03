@@ -26,7 +26,8 @@ class JsonParseError extends Error {
 }
 
 export async function fetchJson(url, { timeout, sourceName }) {
-  const maxAttempts = 2;
+  const maxAttempts = 3;
+  const retryDelayMs = 750;
   let lastError;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
@@ -44,6 +45,8 @@ export async function fetchJson(url, { timeout, sourceName }) {
       if (!isRetryableError(error) || attempt === maxAttempts) {
         throw buildSourceError(sourceName, error, attempt);
       }
+
+      await sleep(retryDelayMs * attempt);
     }
   }
 
@@ -133,9 +136,27 @@ function isRetryableError(error) {
     return true;
   }
 
+  if (error instanceof HttpStatusError) {
+    return [408, 425, 429, 500, 502, 503, 504].includes(error.status);
+  }
+
   if (!(error instanceof Error)) {
     return false;
   }
 
-  return ['ECONNRESET', 'ETIMEDOUT', 'ECONNABORTED'].includes(error.code ?? '');
+  return [
+    'ECONNRESET',
+    'ETIMEDOUT',
+    'ECONNABORTED',
+    'EAI_AGAIN',
+    'ECONNREFUSED',
+    'EHOSTUNREACH',
+    'ENOTFOUND',
+  ].includes(error.code ?? '');
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }

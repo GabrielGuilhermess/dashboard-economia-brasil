@@ -1,4 +1,13 @@
-import { mkdir, mkdtemp, rename, rm, writeFile } from 'node:fs/promises';
+import {
+  chmod,
+  cp,
+  mkdir,
+  mkdtemp,
+  readdir,
+  rename,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import path from 'node:path';
 
 import { PERIODS, SERIES_INDICATORS } from './api-sources.mjs';
@@ -27,6 +36,8 @@ import {
   fetchPibPorUF,
   fetchPopulacaoPorUF,
 } from './ibge-client.mjs';
+
+const PUBLIC_LEGACY_DIR_PATTERN = /^\.data-(build|previous)-/;
 
 export async function generateDashboardData(outputDir) {
   const updatedAt = new Date().toISOString();
@@ -236,10 +247,17 @@ async function writeJson(filePath, payload) {
 
 async function prepareStagingDirectory(outputDir) {
   const parentDir = path.dirname(outputDir);
+
+  await mkdir(parentDir, { recursive: true });
+  await cleanupLegacyPublicArtifacts(parentDir);
+  await cleanupWorkDirectory(parentDir);
+
   const stagingDir = await mkdtemp(path.join(parentDir, '.data-build-'));
   const seriesDir = path.join(stagingDir, 'series');
 
-  await mkdir(seriesDir, { recursive: true });
+  await chmod(stagingDir, 0o755);
+  await mkdir(seriesDir, { recursive: true, mode: 0o755 });
+  await chmod(seriesDir, 0o755);
 
   return {
     parentDir,
@@ -255,7 +273,7 @@ async function replaceOutputDirectory(parentDir, stagingDir, outputDir) {
   );
 
   try {
-    await rename(outputDir, previousDir);
+    await moveDirectory(outputDir, previousDir);
   } catch (error) {
     if (!isMissingPathError(error)) {
       throw error;
@@ -263,10 +281,10 @@ async function replaceOutputDirectory(parentDir, stagingDir, outputDir) {
   }
 
   try {
-    await rename(stagingDir, outputDir);
+    await moveDirectory(stagingDir, outputDir);
   } catch (error) {
     try {
-      await rename(previousDir, outputDir);
+      await moveDirectory(previousDir, outputDir);
     } catch {
       // Best effort rollback.
     }
@@ -277,10 +295,88 @@ async function replaceOutputDirectory(parentDir, stagingDir, outputDir) {
   await rm(previousDir, { recursive: true, force: true }).catch(() => undefined);
 }
 
+async function moveDirectory(sourceDir, destinationDir) {
+  try {
+    await rename(sourceDir, destinationDir);
+  } catch (error) {
+    if (!isCrossDeviceError(error)) {
+      throw error;
+    }
+
+    await cp(sourceDir, destinationDir, { recursive: true, force: true });
+    await rm(sourceDir, { recursive: true, force: true });
+  }
+}
+
+async function cleanupLegacyPublicArtifacts(parentDir) {
+  const legacyDirs = await findDirectoriesMatching(
+    parentDir,
+    PUBLIC_LEGACY_DIR_PATTERN,
+  );
+
+  const failedLegacyDirs = [];
+
+  for (const legacyDir of legacyDirs) {
+    try {
+      await rm(path.join(parentDir, legacyDir), { recursive: true, force: true });
+    } catch (error) {
+      failedLegacyDirs.push({ legacyDir, error });
+    }
+  }
+
+  if (failedLegacyDirs.length === 0) {
+    return;
+  }
+
+  const failedNames = failedLegacyDirs
+    .map(({ legacyDir }) => legacyDir)
+    .join(', ');
+
+  throw new Error(
+    `Nao foi possivel limpar artefatos legados em public/: ${failedNames}. ` +
+      'Isso normalmente indica snapshots antigos criados por outro usuario.',
+  );
+}
+
+async function cleanupWorkDirectory(baseDir) {
+  const staleDirs = await findDirectoriesMatching(
+    baseDir,
+    /^\.data-(build|previous)-/,
+  );
+
+  await Promise.all(
+    staleDirs.map((dirName) =>
+      rm(path.join(baseDir, dirName), { recursive: true, force: true }),
+    ),
+  );
+}
+
+async function findDirectoriesMatching(baseDir, pattern) {
+  let entries = [];
+
+  try {
+    entries = await readdir(baseDir, { withFileTypes: true });
+  } catch (error) {
+    if (isMissingPathError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
+
+  return entries
+    .filter((entry) => entry.isDirectory() && pattern.test(entry.name))
+    .map((entry) => entry.name);
+}
+
 function isMissingPathError(error) {
   return (
     error instanceof Error &&
     'code' in error &&
     (error.code === 'ENOENT' || error.code === 'ENOTDIR')
   );
+}
+
+function isCrossDeviceError(error) {
+  return error instanceof Error && 'code' in error && error.code === 'EXDEV';
 }
