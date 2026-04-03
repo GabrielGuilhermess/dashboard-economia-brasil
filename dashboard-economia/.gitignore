@@ -26,3 +26,4 @@ pnpm-debug.log*
 /.continue/
 /.openai/
 /.llm/
+.vercel

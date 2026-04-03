@@ -26,3 +26,5 @@ INSTRUCTIONS.md
 .continue/
 .openai/
 .llm/
+.vercel
+.env*.local
